@@ -1,0 +1,6 @@
+@LedditScraperAPI_HostAddress = http://localhost:5179
+
+GET {{LedditScraperAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
