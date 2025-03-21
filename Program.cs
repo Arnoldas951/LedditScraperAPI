@@ -10,8 +10,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IGetLedditJsonService, GetLedditJsonService>();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ledditscraperui", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 var app = builder.Build();
+app.UseCors("ledditscraperui");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

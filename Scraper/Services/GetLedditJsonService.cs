@@ -34,6 +34,7 @@ namespace LedditScraperAPI.Scraper.Handlers
                 if (!string.IsNullOrWhiteSpace(item["data"]["secure_media"].ToString()))
                 {
                     var newModel = new LedditJsonModel();
+                    newModel.Id = Guid.NewGuid();
                     newModel.MediaLength = int.Parse(item["data"]["secure_media"]["reddit_video"]["duration"].ToString());
                     newModel.DownloadLink = StaticLinks.RedditPrefix + item["data"]["permalink"];
                     newModel.Title = item["data"]["title"].ToString();
