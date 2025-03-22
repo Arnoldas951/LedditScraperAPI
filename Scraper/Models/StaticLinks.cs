@@ -10,6 +10,7 @@ namespace LedditScraper.Models
     {
         public static string DownloadLink => "https://rapidsave.com/info?url=";
         public static string RedditPrefix => "https://www.reddit.com/r/";
+        public static string Reddit => "https://www.reddit.com";
 
         public static string RedditPostFix => "/hot/.json?limit=5";
         //public static string KidsRStupidHot => "https://www.reddit.com/r/Kidsarefuckingstupid/hot/.json?limit=5";
