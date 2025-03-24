@@ -1,10 +1,6 @@
-﻿using LedditScraperAPI.Scraper.Handlers;
-using LedditScraperAPI.Scraper.Handlers.Abstractions;
-using LedditScraperAPI.Scraper.Models;
+﻿using LedditScraperAPI.Scraper.Handlers.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
 using System.IO.Compression;
-using System.Net.Mail;
 
 namespace LedditScraperAPI.Controllers
 {
