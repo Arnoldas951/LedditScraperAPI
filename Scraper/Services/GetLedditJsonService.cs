@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using LedditScraperAPI.Scraper.Handlers.Abstractions;
 using System;
 using LedditScraperAPI.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace LedditScraperAPI.Scraper.Handlers
 {
@@ -15,9 +16,14 @@ namespace LedditScraperAPI.Scraper.Handlers
     {
         public IEnumerable<LedditJsonModel> GetLedditData(string subreddit)
         {
+            //var service = ChromeDriverService.CreateDefaultService();
+            //service.LogPath = "/tmp/chromedriver.log";
+            //service.EnableVerboseLogging = true;
+
             var objectList = new List<LedditJsonModel>();
             var chromeOptions = new ChromeOptions();
             chromeOptions.AddArguments("headless");
+            //chromeOptions.BinaryLocation = "/usr/bin/google-chrome-stable";
             // Used to workaround headless driver block
             chromeOptions.AddArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
             IWebDriver driver;
