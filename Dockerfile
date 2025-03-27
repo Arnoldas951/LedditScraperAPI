@@ -6,6 +6,7 @@ USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+EXPOSE 2222
 
 
 # This stage is used to build the service project
@@ -39,10 +40,21 @@ RUN apk update && apk add --no-cache \
     curl \
     unzip \
     udev \
-    dbus
+    dbus \
+    openssh
 
 RUN rm -rf /var/cache/apk/* /tmp/*
 
+# Configure SSH
+RUN echo "root:Docker!" | chpasswd  # Set root password (change this later!)
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config
+
+RUN ssh-keygen -A && chmod 600 /etc/ssh/ssh_host_*_key
+
+RUN mkdir -p /var/run/sshd
 
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 RUN chown -R appuser:appuser /app
@@ -53,5 +65,10 @@ COPY --from=publish /app/publish .
 
 RUN chmod +x /app/selenium-manager/linux/selenium-manager
 RUN chown -R appuser:appuser /app/selenium-manager
+RUN chmod 600 /etc/ssh/ssh_host_* && chmod 644 /etc/ssh/ssh_host_*.pub
+
+CMD ["/usr/sbin/sshd", "-D"]
+
+
 USER appuser
 ENTRYPOINT ["dotnet", "LedditScraperAPI.dll"]

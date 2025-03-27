@@ -10,8 +10,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IGetLedditJsonService, GetLedditJsonService>();
-if (builder.Environment.IsDevelopment())
-{
+//if (builder.Environment.IsDevelopment())
+//{
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("ledditscraperui", policy =>
@@ -21,16 +21,16 @@ if (builder.Environment.IsDevelopment())
                 .AllowAnyMethod();
         });
     });
-}
+//}
 var app = builder.Build();
 
-
+app.UseCors("ledditscraperui");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("ledditscraperui");
+    
 }
 
 app.UseHttpsRedirection();

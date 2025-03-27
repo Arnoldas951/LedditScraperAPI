@@ -16,9 +16,9 @@ namespace LedditScraperAPI.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get(string subreddit)
+        public async Task<IActionResult> Get(string subreddit)
         {
-            var result = _ledditJsonService.GetLedditData(subreddit);
+            var result = await _ledditJsonService.GetLedditData(subreddit);
 
             return new JsonResult(result);
         }

@@ -4,7 +4,7 @@ namespace LedditScraperAPI.Scraper.Handlers.Abstractions
 {
     public interface IGetLedditJsonService
     {
-        IEnumerable<LedditJsonModel> GetLedditData(string subreddit);
+        Task<IEnumerable<LedditJsonModel>> GetLedditData(string subreddit);
         Task<Byte[]> DownloadVideo(string downloadLink);
     }
 }

@@ -8,50 +8,80 @@ using LedditScraperAPI.Scraper.Handlers.Abstractions;
 using System;
 using LedditScraperAPI.Extensions;
 using Microsoft.Extensions.Options;
+using OpenQA.Selenium.Interactions;
 
 namespace LedditScraperAPI.Scraper.Handlers
 {
 
     public class GetLedditJsonService : IGetLedditJsonService
     {
-        public IEnumerable<LedditJsonModel> GetLedditData(string subreddit)
+
+        private readonly ILogger<GetLedditJsonService> _logger;
+
+        public GetLedditJsonService(ILogger<GetLedditJsonService> logger)
         {
-            //var service = ChromeDriverService.CreateDefaultService();
-            //service.LogPath = "/tmp/chromedriver.log";
-            //service.EnableVerboseLogging = true;
+            _logger = logger;
+        }
 
-            var objectList = new List<LedditJsonModel>();
-            var chromeOptions = new ChromeOptions();
-            chromeOptions.AddArguments("headless");
-            //chromeOptions.BinaryLocation = "/usr/bin/google-chrome-stable";
-            // Used to workaround headless driver block
-            chromeOptions.AddArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
-            IWebDriver driver;
-            driver = new ChromeDriver(chromeOptions);
-            driver.Url = StaticLinks.RedditPrefix + subreddit + StaticLinks.RedditPostFix;
-
-            var jsonContent = driver.FindElement(By.TagName("pre")).Text;
-            driver.Close();
-
-            var root = (JObject)JsonConvert.DeserializeObject(jsonContent);
-            var items = root.SelectToken("data").Children();
-            var childItems = items.Children().ToList();
-            var childerItems = childItems.Children().ToList();
-            foreach (var item in childerItems)
+        public async Task<IEnumerable<LedditJsonModel>> GetLedditData(string subreddit)
+        {
+            return await Task.Run(() =>
             {
-                if (!string.IsNullOrWhiteSpace(item["data"]["secure_media"].ToString()))
+                var service = ChromeDriverService.CreateDefaultService();
+                service.LogPath = "/tmp/chromedriver.log";
+                service.EnableVerboseLogging = true;
+
+                var objectList = new List<LedditJsonModel>();
+                var chromeOptions = new ChromeOptions();
+                chromeOptions.SetLoggingPreference(LogType.Browser, OpenQA.Selenium.LogLevel.All);
+                chromeOptions.SetLoggingPreference(LogType.Driver, OpenQA.Selenium.LogLevel.All);
+                chromeOptions.AddArgument("--verbose");
+                chromeOptions.AddArgument("--disable-gpu");
+                chromeOptions.AddArguments("headless");
+                chromeOptions.AddArgument("no-sandbox");
+                //chromeOptions.BinaryLocation = "/usr/bin/google-chrome-stable";
+                // Used to workaround headless driver block
+                chromeOptions.AddArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+                IWebDriver driver = null;
+                try
                 {
-                    var newModel = new LedditJsonModel();
-                    newModel.Id = Guid.NewGuid();
-                    newModel.MediaLength = int.Parse(item["data"]["secure_media"]["reddit_video"]["duration"].ToString());
-                    newModel.DownloadLink = StaticLinks.Reddit + item["data"]["permalink"];
-                    newModel.Title = item["data"]["title"].ToString();
-                    newModel.UpvoteRatio = item["data"]["upvote_ratio"].ToString();
-                    newModel.IsNsfw = item["data"]["nsfw"] == null ? false : true;
-                    objectList.Add(newModel);
+                    _logger.LogInformation("navigating to " + StaticLinks.RedditPrefix + subreddit + StaticLinks.RedditPostFix);
+                    driver = new ChromeDriver(chromeOptions);
+                    driver.Url = StaticLinks.RedditPrefix + subreddit + StaticLinks.RedditPostFix;
+
+
+                    var jsonContent = driver.FindElement(By.TagName("pre")).Text;
+
+                    var root = (JObject)JsonConvert.DeserializeObject(jsonContent);
+                    var items = root.SelectToken("data").Children();
+                    var childItems = items.Children().ToList();
+                    var childerItems = childItems.Children().ToList();
+                    foreach (var item in childerItems)
+                    {
+                        if (!string.IsNullOrWhiteSpace(item["data"]["secure_media"].ToString()))
+                        {
+                            var newModel = new LedditJsonModel();
+                            newModel.Id = Guid.NewGuid();
+                            newModel.MediaLength = int.Parse(item["data"]["secure_media"]["reddit_video"]["duration"].ToString());
+                            newModel.DownloadLink = StaticLinks.Reddit + item["data"]["permalink"];
+                            newModel.Title = item["data"]["title"].ToString();
+                            newModel.UpvoteRatio = item["data"]["upvote_ratio"].ToString();
+                            newModel.IsNsfw = item["data"]["nsfw"] == null ? false : true;
+                            objectList.Add(newModel);
+                        }
+                    }
                 }
-            }
-            return objectList;
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error occurred while getting Leddit data.");
+                }
+                finally
+                {
+                    driver?.Quit();
+                }
+
+                return objectList;
+            });
         }
 
         public async Task<byte[]> DownloadVideo(string downloadLink)
